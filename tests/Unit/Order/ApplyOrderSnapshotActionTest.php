@@ -16,6 +16,13 @@ class ApplyOrderSnapshotActionTest extends TestCase
 {
     use BuildsOrderSnapshots, RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seedLetterTemplates();
+    }
+
     public function test_first_snapshot_creates_order_with_items_and_history(): void
     {
         $outcome = $this->apply('order-created');

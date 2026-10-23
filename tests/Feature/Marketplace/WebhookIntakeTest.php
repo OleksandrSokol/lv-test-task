@@ -14,6 +14,13 @@ class WebhookIntakeTest extends TestCase
 {
     use RefreshDatabase, SendsMarketplaceWebhooks;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seedLetterTemplates();
+    }
+
     /**
      * @return array<string, array{string}>
      */
