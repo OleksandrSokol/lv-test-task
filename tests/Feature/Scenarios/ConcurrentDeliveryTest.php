@@ -94,7 +94,7 @@ class ConcurrentDeliveryTest extends TestCase
      * Sends each body from its own process, all released at the same moment.
      *
      * @param  list<string>  $bodies
-     * @return list<string>  the `status` of each response
+     * @return list<string> the `status` of each response
      */
     private function deliverAtOnce(array $bodies): array
     {

@@ -4,7 +4,6 @@ namespace Tests\Feature\Scenarios;
 
 use App\Modules\Notification\Jobs\SendLetterJob;
 use App\Modules\Notification\Mail\LetterMail;
-use App\Modules\Order\Models\Order;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
