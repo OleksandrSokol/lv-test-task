@@ -8,6 +8,7 @@ use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Users\Pages\ManageUsers;
 use App\Filament\Resources\WebhookEvents\Pages\ManageWebhookEvents;
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Core\Models\Log;
 use App\Modules\Marketplace\Models\WebhookEvent;
 use App\Modules\Notification\Enums\LetterEnum;
@@ -143,13 +144,13 @@ class OrderAdminTest extends TestCase
         $ofOrder = Log::query()->whereRaw("data->>'order_id' = ?", [(string) $order->id])->get();
         $this->assertEqualsCanonicalizing(
             ['order.created', 'order.status_changed', 'webhook.applied', 'letter.queued', 'letter.sent'],
-            $ofOrder->pluck('event')->all(),
+            $ofOrder->pluck('event')->map->value->all(),
         );
         // One meaning per key, whatever the event is about.
         $ofOrder->each(fn (Log $log) => $this->assertSame(
             [$order->id, 'ord_7Q2KX9M4'],
             [$log->data['order_id'], $log->data['order_external_id']],
-            $log->event,
+            $log->event->value,
         ));
 
         $url = Livewire::test(ViewOrder::class, ['record' => $order->id])->instance()->getAction('view_logs')->getUrl();
@@ -160,6 +161,7 @@ class OrderAdminTest extends TestCase
         Livewire::test(ManageLogs::class)
             ->filterTable('order', ['order_id' => $order->id])
             ->assertCanSeeTableRecords($ofOrder)
+            ->assertTableColumnFormattedStateSet('event', 'Письмо отправлено', $ofOrder->firstWhere('event', ActivityEventEnum::LETTER_SENT))
             ->assertCanNotSeeTableRecords(Log::query()->whereRaw("data->>'order_external_id' = ?", ['ord_3HV8PW2C'])->get());
     }
 

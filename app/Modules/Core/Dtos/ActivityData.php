@@ -2,6 +2,7 @@
 
 namespace App\Modules\Core\Dtos;
 
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Core\Enums\ActivitySourceEnum;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\LaravelData\Data;
@@ -15,7 +16,7 @@ class ActivityData extends Data
      * @param  array<string, mixed>  $data
      */
     public function __construct(
-        public string $event,
+        public ActivityEventEnum $event,
         public ActivitySourceEnum $source,
         public ?Model $subject = null,
         public array $data = [],

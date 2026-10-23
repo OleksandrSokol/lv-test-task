@@ -13,7 +13,7 @@ class WriteActivityLog
 
         // A plain insert: a log row must not fire model events of its own.
         Log::query()->insert([
-            'event'        => $activity->event,
+            'event'        => $activity->event->value,
             'subject_type' => $activity->subject?->getMorphClass(),
             'subject_id'   => $activity->subject?->getKey(),
             'data'         => $activity->data === [] ? null : json_encode($activity->data, JSON_UNESCAPED_UNICODE),

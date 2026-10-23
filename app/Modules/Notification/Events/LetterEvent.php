@@ -3,6 +3,7 @@
 namespace App\Modules\Notification\Events;
 
 use App\Modules\Core\Dtos\ActivityData;
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Core\Enums\ActivitySourceEnum;
 use App\Modules\Core\Events\DomainEvent;
 use App\Modules\Notification\Models\LogLetter;
@@ -16,7 +17,7 @@ abstract class LetterEvent extends DomainEvent
         public readonly LogLetter $letter,
     ) {}
 
-    abstract protected function name(): string;
+    abstract protected function name(): ActivityEventEnum;
 
     /**
      * @return array<string, mixed>

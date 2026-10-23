@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Logs;
 
 use App\Filament\Infolists\JsonEntry;
 use App\Filament\Resources\Logs\Pages\ManageLogs;
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Core\Enums\ActivitySourceEnum;
 use App\Modules\Core\Models\Log;
 use App\Modules\Order\Models\Order;
@@ -79,7 +80,7 @@ class LogResource extends Resource
                 TextColumn::make('event')
                     ->label(__('admin.logs.fields.event'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state) => self::eventLabel($state)),
+                    ->formatStateUsing(fn (ActivityEventEnum $state) => $state->label()),
 
                 TextColumn::make('subject_type')
                     ->label(__('admin.logs.fields.subject_type'))
@@ -97,7 +98,7 @@ class LogResource extends Resource
             ->filters([
                 SelectFilter::make('event')
                     ->label(__('admin.logs.fields.event'))
-                    ->options(__('admin.logs.events')),
+                    ->options(ActivityEventEnum::options()),
 
                 SelectFilter::make('source')
                     ->label(__('admin.logs.fields.source'))
@@ -187,7 +188,7 @@ class LogResource extends Resource
                             TextEntry::make('event')
                                 ->label(__('admin.logs.fields.event'))
                                 ->badge()
-                                ->formatStateUsing(fn (string $state) => self::eventLabel($state)),
+                                ->formatStateUsing(fn (ActivityEventEnum $state) => $state->label()),
 
                             TextEntry::make('created_at')
                                 ->label(__('admin.logs.fields.created_at'))
@@ -223,12 +224,6 @@ class LogResource extends Resource
     private static function orderLabel(Order $order): string
     {
         return "{$order->number} ({$order->external_id})";
-    }
-
-    private static function eventLabel(string $event): string
-    {
-        // Event names contain dots, so they cannot be a translation key path.
-        return __('admin.logs.events')[$event] ?? $event;
     }
 
     private static function subjectLabel(string $type): string

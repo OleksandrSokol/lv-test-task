@@ -172,6 +172,6 @@ class ApplyOrderSnapshotActionTest extends TestCase
      */
     private function logEvents(): array
     {
-        return Log::query()->orderBy('id')->pluck('event')->all();
+        return Log::query()->orderBy('id')->pluck('event')->map->value->all();
     }
 }

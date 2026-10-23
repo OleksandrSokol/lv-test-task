@@ -2,11 +2,13 @@
 
 namespace App\Modules\Order\Events;
 
+use App\Modules\Core\Enums\ActivityEventEnum;
+
 class OrderCreated extends OrderEvent
 {
-    protected function name(): string
+    protected function name(): ActivityEventEnum
     {
-        return 'order.created';
+        return ActivityEventEnum::ORDER_CREATED;
     }
 
     protected function details(): array

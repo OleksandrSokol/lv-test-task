@@ -3,6 +3,7 @@
 namespace App\Modules\Order\Events;
 
 use App\Modules\Core\Dtos\ActivityData;
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Core\Enums\ActivitySourceEnum;
 use App\Modules\Core\Events\DomainEvent;
 use App\Modules\Order\Models\Order;
@@ -17,7 +18,7 @@ abstract class OrderEvent extends DomainEvent
         public readonly Order $order,
     ) {}
 
-    abstract protected function name(): string;
+    abstract protected function name(): ActivityEventEnum;
 
     /**
      * @return array<string, mixed>

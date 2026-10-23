@@ -2,6 +2,7 @@
 
 namespace App\Modules\Order\Events;
 
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Order\Enums\OrderStatusEnum;
 use App\Modules\Order\Models\Order;
 
@@ -18,9 +19,9 @@ class OrderStatusChanged extends OrderEvent
         parent::__construct($order);
     }
 
-    protected function name(): string
+    protected function name(): ActivityEventEnum
     {
-        return 'order.status_changed';
+        return ActivityEventEnum::ORDER_STATUS_CHANGED;
     }
 
     protected function details(): array

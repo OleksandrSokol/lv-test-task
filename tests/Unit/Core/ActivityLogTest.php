@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Core;
 
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Core\Enums\ActivitySourceEnum;
 use App\Modules\Core\Models\Log;
 use App\Modules\User\Models\User;
@@ -23,7 +24,7 @@ class ActivityLogTest extends TestCase
 
         $log = Log::query()->sole();
 
-        $this->assertSame('user.renamed', $log->event);
+        $this->assertSame(ActivityEventEnum::ORDER_UPDATED, $log->event);
         $this->assertSame(ActivitySourceEnum::QUEUE, $log->source);
         $this->assertTrue($log->subject->is($user));
         $this->assertEquals(['old' => 'Аня', 'new' => 'Анна'], $log->data);

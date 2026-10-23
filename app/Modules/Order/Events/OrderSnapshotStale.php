@@ -2,6 +2,7 @@
 
 namespace App\Modules\Order\Events;
 
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Order\Models\Order;
 use Carbon\CarbonImmutable;
 
@@ -14,9 +15,9 @@ class OrderSnapshotStale extends OrderEvent
         parent::__construct($order);
     }
 
-    protected function name(): string
+    protected function name(): ActivityEventEnum
     {
-        return 'order.snapshot_stale';
+        return ActivityEventEnum::ORDER_SNAPSHOT_STALE;
     }
 
     protected function details(): array

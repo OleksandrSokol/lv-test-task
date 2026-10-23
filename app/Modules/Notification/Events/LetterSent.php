@@ -2,10 +2,12 @@
 
 namespace App\Modules\Notification\Events;
 
+use App\Modules\Core\Enums\ActivityEventEnum;
+
 class LetterSent extends LetterEvent
 {
-    protected function name(): string
+    protected function name(): ActivityEventEnum
     {
-        return 'letter.sent';
+        return ActivityEventEnum::LETTER_SENT;
     }
 }

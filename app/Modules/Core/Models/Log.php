@@ -2,6 +2,7 @@
 
 namespace App\Modules\Core\Models;
 
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Core\Enums\ActivitySourceEnum;
 use App\Modules\Core\Traits\Models\StoresDatesWithOffset;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ class Log extends Model
     protected function casts(): array
     {
         return [
+            'event'      => ActivityEventEnum::class,
             'data'       => 'array',
             'source'     => ActivitySourceEnum::class,
             'created_at' => 'immutable_datetime',

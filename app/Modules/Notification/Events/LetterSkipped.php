@@ -2,6 +2,7 @@
 
 namespace App\Modules\Notification\Events;
 
+use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Notification\Models\LogLetter;
 
 class LetterSkipped extends LetterEvent
@@ -13,9 +14,9 @@ class LetterSkipped extends LetterEvent
         parent::__construct($letter);
     }
 
-    protected function name(): string
+    protected function name(): ActivityEventEnum
     {
-        return 'letter.skipped';
+        return ActivityEventEnum::LETTER_SKIPPED;
     }
 
     protected function details(): array

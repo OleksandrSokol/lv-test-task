@@ -128,21 +128,6 @@ return [
             'until'        => 'По',
         ],
 
-        'events' => [
-            'webhook.applied'      => 'Вебхук применён',
-            'webhook.stale'        => 'Вебхук устарел',
-            'webhook.ignored'      => 'Вебхук пропущен',
-            'webhook.duplicate'    => 'Повтор вебхука',
-            'order.created'        => 'Заказ создан',
-            'order.updated'        => 'Заказ изменён',
-            'order.status_changed' => 'Сменился статус заказа',
-            'order.snapshot_stale' => 'Устаревший снимок заказа',
-            'letter.queued'        => 'Письмо в очереди',
-            'letter.sent'          => 'Письмо отправлено',
-            'letter.failed'        => 'Ошибка отправки письма',
-            'letter.skipped'       => 'Письмо не отправлено',
-        ],
-
         'subjects' => [
             'order'         => 'Заказ',
             'log_letter'    => 'Письмо',
