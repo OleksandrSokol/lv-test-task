@@ -121,6 +121,7 @@ return [
             'event'        => 'Событие',
             'subject_type' => 'Объект',
             'subject_id'   => 'ID объекта',
+            'order'        => 'Заказ',
             'source'       => 'Источник',
             'data'         => 'Данные',
             'from'         => 'С',
@@ -149,6 +150,7 @@ return [
         ],
 
         'subject_indicator' => 'ID объекта: :id',
+        'order_indicator'   => 'Заказ: :order',
         'period_indicator'  => 'Период: :from — :until',
     ],
 

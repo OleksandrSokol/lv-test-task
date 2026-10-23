@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Filament\Resources\LetterTemplates\Pages\ManageLetterTemplates;
 use App\Filament\Resources\Logs\Pages\ManageLogs;
 use App\Filament\Resources\Orders\Pages\ListOrders;
+use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Users\Pages\ManageUsers;
 use App\Filament\Resources\WebhookEvents\Pages\ManageWebhookEvents;
 use App\Modules\Core\Models\Log;
@@ -131,27 +132,35 @@ class OrderAdminTest extends TestCase
         $this->get('/admin/log-letters')->assertOk();
     }
 
-    public function test_activity_log_filters_to_the_record_like_view_logs_link(): void
+    public function test_order_log_shows_its_letters_and_webhooks_with_the_same_order_ids(): void
     {
         Mail::fake();
         $this->seedLetterTemplates();
         $this->sendWebhook($this->exampleEvent('order-paid'))->assertOk();
+        $this->sendWebhook($this->exampleEvent('order-cancelled'))->assertOk();
         $order = Order::query()->where('external_id', 'ord_7Q2KX9M4')->firstOrFail();
-        Order::factory()->create();
 
-        $this->get('/admin/logs?filters[subject_type][value]=' . urlencode(Order::class) . "&filters[subject_id][subject_id]={$order->id}")
-            ->assertOk()
-            ->assertSeeText('Заказ создан');
+        $ofOrder = Log::query()->whereRaw("data->>'order_id' = ?", [(string) $order->id])->get();
+        $this->assertEqualsCanonicalizing(
+            ['order.created', 'order.status_changed', 'webhook.applied', 'letter.queued', 'letter.sent'],
+            $ofOrder->pluck('event')->all(),
+        );
+        // One meaning per key, whatever the event is about.
+        $ofOrder->each(fn (Log $log) => $this->assertSame(
+            [$order->id, 'ord_7Q2KX9M4'],
+            [$log->data['order_id'], $log->data['order_external_id']],
+            $log->event,
+        ));
 
-        $ofOrder = Log::query()->where('subject_type', Order::class)->where('subject_id', $order->id)->get();
-        $this->assertNotEmpty($ofOrder);
+        $url = Livewire::test(ViewOrder::class, ['record' => $order->id])->instance()->getAction('view_logs')->getUrl();
+        $this->assertStringContainsString('filters[order][order_id]=' . $order->id, urldecode($url));
+
+        $this->get($url)->assertOk();
 
         Livewire::test(ManageLogs::class)
-            ->filterTable('subject_type', Order::class)
-            ->filterTable('subject_id', ['subject_id' => $order->id])
+            ->filterTable('order', ['order_id' => $order->id])
             ->assertCanSeeTableRecords($ofOrder)
-            ->assertTableColumnFormattedStateSet('event', 'Заказ создан', $ofOrder->firstWhere('event', 'order.created'))
-            ->assertCanNotSeeTableRecords(Log::query()->where('subject_type', '!=', Order::class)->get());
+            ->assertCanNotSeeTableRecords(Log::query()->whereRaw("data->>'order_external_id' = ?", ['ord_3HV8PW2C'])->get());
     }
 
     public function test_webhook_inbox_shows_events_with_readable_type_and_result(): void

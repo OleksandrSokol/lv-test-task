@@ -24,7 +24,9 @@ class WebhookProcessed extends DomainEvent
             data: [
                 'event_id' => $this->event->event_id,
                 'type'     => $this->event->type,
-                'order_id' => $this->event->order_external_id,
+                // Null for an event of a type we ignore: it does not touch an order.
+                'order_id'          => $this->event->order?->id,
+                'order_external_id' => $this->event->order_external_id,
             ],
         );
     }

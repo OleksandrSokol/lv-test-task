@@ -33,7 +33,11 @@ abstract class OrderEvent extends DomainEvent
             event: $this->name(),
             source: ActivitySourceEnum::WEBHOOK,
             subject: $this->order,
-            data: ['order_id' => $this->order->external_id, ...$this->details()],
+            data: [
+                'order_id'          => $this->order->id,
+                'order_external_id' => $this->order->external_id,
+                ...$this->details(),
+            ],
         );
     }
 }

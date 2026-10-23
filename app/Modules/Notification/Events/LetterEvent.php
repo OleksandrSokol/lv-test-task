@@ -33,8 +33,9 @@ abstract class LetterEvent extends DomainEvent
             source: ActivitySourceEnum::QUEUE,
             subject: $this->letter,
             data: [
-                'template' => $this->letter->template_key->value,
-                'order_id' => $this->letter->order_id,
+                'template'          => $this->letter->template_key->value,
+                'order_id'          => $this->letter->order_id,
+                'order_external_id' => $this->letter->order?->external_id,
                 ...$this->details(),
             ],
         );
