@@ -37,7 +37,6 @@ class ReceiveWebhookAction
         $inbox = WebhookEvent::query()->createOrFirst(['event_id' => $event->id], [
             'type'              => $event->type,
             'order_external_id' => $snapshot?->externalId,
-            'payload'           => $event->toArray(),
             'raw_body'          => $rawBody,
             'occurred_at'       => $event->createdAt,
             'status'            => WebhookStatusEnum::RECEIVED,

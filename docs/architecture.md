@@ -58,7 +58,7 @@ POST /api/webhooks/marketplace
 | `orders` | Текущее состояние заказа. `external_id` — id маркетплейса (unique); `external_created_at` / `external_updated_at` — его время; `created_at` / `updated_at` — наше |
 | `order_items` | Позиции из последнего применённого снимка |
 | `order_status_history` | Статусы с моментом по данным маркетплейса; unique `(order_id, status, changed_at)` |
-| `webhook_events` | Inbox: unique `event_id`, тип, результат, разобранное событие и сырое тело запроса |
+| `webhook_events` | Inbox: unique `event_id`, тип, результат, id заказа, сырое тело запроса |
 | `letter_templates` | Тема и текст писем, редактируются в админке |
 | `log_letters` | Письма заказа: получатель, текст, статус (`queued` / `sent` / `failed` / `skipped`); unique `(order_id, template_key)` |
 | `logs` | Журнал действий: событие, объект, данные, источник (вебхук или очередь) |

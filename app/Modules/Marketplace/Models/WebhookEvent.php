@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Inbox of received marketplace events. The unique `event_id` makes redeliveries no-ops.
  */
-#[Fillable(['event_id', 'type', 'order_external_id', 'payload', 'raw_body', 'occurred_at', 'status'])]
+#[Fillable(['event_id', 'type', 'order_external_id', 'raw_body', 'occurred_at', 'status'])]
 class WebhookEvent extends Model
 {
     use StoresDatesWithOffset;
@@ -20,7 +20,6 @@ class WebhookEvent extends Model
     protected function casts(): array
     {
         return [
-            'payload'     => 'array',
             'status'      => WebhookStatusEnum::class,
             'occurred_at' => 'immutable_datetime',
         ];

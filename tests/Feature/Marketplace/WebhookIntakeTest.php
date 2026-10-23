@@ -64,7 +64,7 @@ class WebhookIntakeTest extends TestCase
         $this->assertSame('order.paid', $inbox->type);
         $this->assertSame('ord_7Q2KX9M4', $inbox->order_external_id);
         $this->assertSame('2026-10-21T10:05:48+00:00', $inbox->occurred_at->toIso8601String());
-        $this->assertSame('ord_7Q2KX9M4', $inbox->payload['data']['order']['id']);
+        $this->assertSame('ord_7Q2KX9M4', json_decode($inbox->raw_body, true)['data']['order']['id']);
     }
 
     public function test_redelivery_with_new_timestamp_is_a_no_op(): void
