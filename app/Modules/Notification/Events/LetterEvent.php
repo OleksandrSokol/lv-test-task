@@ -36,7 +36,7 @@ abstract class LetterEvent extends DomainEvent
             data: [
                 'template'          => $this->letter->template_key->value,
                 'order_id'          => $this->letter->order_id,
-                'order_external_id' => $this->letter->order?->external_id,
+                'order_external_id' => $this->letter->order->external_id,
                 ...$this->details(),
             ],
         );

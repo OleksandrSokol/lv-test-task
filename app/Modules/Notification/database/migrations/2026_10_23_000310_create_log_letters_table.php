@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('log_letters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('order_id')->constrained();
             $table->string('template_key');
             $table->string('receiver');
             $table->string('subject');
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('error_message')->nullable();
             $table->timestampsTz();
 
-            // A letter goes to an order once; letters without an order (NULL) are not limited.
+            // A letter of a kind goes to an order once.
             $table->unique(['order_id', 'template_key']);
         });
     }

@@ -42,6 +42,7 @@ class LetterServiceTest extends TestCase
         $letter = $this->service()->send(new SendLetterData(
             key: LetterEnum::ORDER_PAID,
             to: 'anna@example.com',
+            orderId: Order::factory()->create()->id,
             replace: ['number' => 'MH-1', 'total' => '10.00', 'currency' => 'RUB'],
         ));
 
@@ -81,7 +82,7 @@ class LetterServiceTest extends TestCase
     public function test_job_sends_queued_letter_and_marks_it_sent(): void
     {
         Mail::fake();
-        $letter = $this->service()->send(new SendLetterData(key: LetterEnum::ORDER_PAID, to: 'a@example.com'));
+        $letter = $this->service()->send(new SendLetterData(key: LetterEnum::ORDER_PAID, to: 'a@example.com', orderId: Order::factory()->create()->id));
 
         (new SendLetterJob($letter))->handle();
 
@@ -92,7 +93,7 @@ class LetterServiceTest extends TestCase
     public function test_job_does_not_send_withdrawn_letter(): void
     {
         Mail::fake();
-        $letter = $this->service()->send(new SendLetterData(key: LetterEnum::ORDER_PAID, to: 'a@example.com'));
+        $letter = $this->service()->send(new SendLetterData(key: LetterEnum::ORDER_PAID, to: 'a@example.com', orderId: Order::factory()->create()->id));
         $letter->update(['status' => LogLetterStatusEnum::SKIPPED]);
 
         (new SendLetterJob($letter))->handle();
@@ -102,7 +103,7 @@ class LetterServiceTest extends TestCase
 
     public function test_failed_job_marks_letter_failed(): void
     {
-        $letter = $this->service()->send(new SendLetterData(key: LetterEnum::ORDER_PAID, to: 'a@example.com'));
+        $letter = $this->service()->send(new SendLetterData(key: LetterEnum::ORDER_PAID, to: 'a@example.com', orderId: Order::factory()->create()->id));
 
         (new SendLetterJob($letter))->failed(new RuntimeException('SMTP is down'));
 

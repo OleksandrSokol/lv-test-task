@@ -18,6 +18,7 @@ use App\Modules\User\Models\User;
 use Carbon\CarbonImmutable;
 use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -181,6 +182,8 @@ class OrderAdminTest extends TestCase
             ->assertTableColumnFormattedStateSet('type', 'Заказ оформлен', $created)
             ->assertTableColumnFormattedStateSet('status', 'Применён', $created)
             ->assertTableColumnFormattedStateSet('type', 'Неизвестный тип: order.refund_requested', $unknown)
+            // Only outcomes a stored event can have.
+            ->assertTableFilterExists('status', fn (SelectFilter $filter) => array_keys($filter->getOptions()) === ['applied', 'stale', 'ignored'])
             ->filterTable('status', 'ignored')
             ->assertCanSeeTableRecords([$unknown])
             ->assertCanNotSeeTableRecords([$created]);

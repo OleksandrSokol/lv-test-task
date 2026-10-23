@@ -32,9 +32,7 @@ class LetterService
             'status'      => LogLetterStatusEnum::QUEUED,
         ];
 
-        $letter = $data->orderId === null
-            ? LogLetter::query()->create(['template_key' => $data->key, ...$attributes])
-            : LogLetter::query()->createOrFirst(['order_id' => $data->orderId, 'template_key' => $data->key], $attributes);
+        $letter = LogLetter::query()->createOrFirst(['order_id' => $data->orderId, 'template_key' => $data->key], $attributes);
 
         if (!$letter->wasRecentlyCreated) {
             return null;

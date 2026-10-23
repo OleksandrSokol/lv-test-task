@@ -75,7 +75,7 @@ class LogLetterResource extends Resource
 
                 TextColumn::make('order.number')
                     ->label(__('admin.log_letters.fields.order'))
-                    ->url(fn (LogLetter $record) => $record->order ? OrderResource::getUrl('view', ['record' => $record->order]) : null),
+                    ->url(fn (LogLetter $record) => OrderResource::getUrl('view', ['record' => $record->order])),
 
                 TextColumn::make('receiver')
                     ->label(__('admin.log_letters.fields.receiver'))

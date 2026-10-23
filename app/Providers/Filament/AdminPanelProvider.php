@@ -35,8 +35,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function boot(): void
     {
-        // Dates are stored in UTC; the shop's staff reads them in Moscow time.
-        FilamentTimezone::set('Europe/Moscow');
+        FilamentTimezone::set(config('app.admin_timezone'));
     }
 
     public function panel(Panel $panel): Panel

@@ -106,8 +106,11 @@ class WebhookEventResource extends Resource
             ->filters([
                 SelectFilter::make('status')
                     ->label(__('admin.webhook_events.fields.status'))
-                    // A duplicate is never stored.
-                    ->options(collect(WebhookStatusEnum::options())->except(WebhookStatusEnum::DUPLICATE->value)->all()),
+                    // A stored event always has its outcome: `received` lasts only inside the transaction,
+                    // a duplicate is never stored.
+                    ->options(collect(WebhookStatusEnum::options())
+                        ->except([WebhookStatusEnum::RECEIVED->value, WebhookStatusEnum::DUPLICATE->value])
+                        ->all()),
 
                 SelectFilter::make('type')
                     ->label(__('admin.webhook_events.fields.type'))

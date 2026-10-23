@@ -67,6 +67,9 @@ return [
 
     'timezone' => 'UTC',
 
+    // Dates are stored in UTC; the admin panel shows them in the shop's time zone.
+    'admin_timezone' => env('ADMIN_TIMEZONE', 'Europe/Moscow'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
