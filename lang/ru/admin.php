@@ -2,7 +2,8 @@
 
 return [
     'actions' => [
-        'view_logs' => 'Журнал',
+        'view_logs'     => 'Журнал',
+        'view_webhooks' => 'Вебхуки',
     ],
 
     'filters' => [

@@ -189,7 +189,7 @@ class OrderAdminTest extends TestCase
             ->assertCanNotSeeTableRecords([$created]);
     }
 
-    public function test_webhook_inbox_filters_by_order(): void
+    public function test_webhook_inbox_filters_by_order_and_order_card_links_to_it(): void
     {
         Mail::fake();
         $this->seedLetterTemplates();
@@ -199,6 +199,11 @@ class OrderAdminTest extends TestCase
 
         $ofOrder = WebhookEvent::query()->where('order_external_id', 'ord_7Q2KX9M4')->get();
         $this->assertCount(2, $ofOrder);
+
+        $order = Order::query()->where('external_id', 'ord_7Q2KX9M4')->firstOrFail();
+        $url = Livewire::test(ViewOrder::class, ['record' => $order->id])->instance()->getAction('view_webhooks')->getUrl();
+        $this->assertStringContainsString('filters[order][order_external_id]=ord_7Q2KX9M4', urldecode($url));
+        $this->get($url)->assertOk()->assertSeeText('Заказ: MH-1048213 (ord_7Q2KX9M4)');
 
         Livewire::test(ManageWebhookEvents::class)
             ->filterTable('order', ['order_external_id' => 'ord_7Q2KX9M4'])

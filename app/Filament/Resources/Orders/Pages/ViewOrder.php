@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Orders\Pages;
 
 use App\Filament\Actions\ViewLogsAction;
+use App\Filament\Actions\ViewWebhooksAction;
 use App\Filament\Resources\Orders\OrderResource;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -13,6 +14,7 @@ class ViewOrder extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            ViewWebhooksAction::make()->outlined(),
             ViewLogsAction::make()->outlined(),
         ];
     }
