@@ -68,7 +68,19 @@ class WebhookIntakeTest extends TestCase
         $this->sendWebhook($body)->assertOk()->assertJson(['status' => 'duplicate']);
 
         $this->assertSame(1, WebhookEvent::query()->count());
-        $this->assertSame(['webhook.applied', 'webhook.duplicate'], Log::query()->orderBy('id')->pluck('event')->all());
+        $this->assertSame(['webhook.applied', 'webhook.duplicate'], Log::query()->where('event', 'like', 'webhook.%')->orderBy('id')->pluck('event')->all());
+    }
+
+    public function test_older_snapshot_is_accepted_as_stale(): void
+    {
+        $this->sendWebhook($this->exampleEvent('order-paid'))->assertOk()->assertJson(['status' => 'applied']);
+
+        $this->sendWebhook($this->exampleEvent('order-created'))->assertOk()->assertJson(['status' => 'stale']);
+
+        $this->assertSame(
+            ['applied', 'stale'],
+            WebhookEvent::query()->orderBy('id')->pluck('status')->map->value->all(),
+        );
     }
 
     public function test_unknown_event_type_is_accepted_and_ignored(): void
