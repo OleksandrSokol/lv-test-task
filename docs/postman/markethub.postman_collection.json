@@ -1,0 +1,1247 @@
+{
+    "info": {
+        "name": "MarketHub — заказы",
+        "description": "Вебхуки маркетплейса (с подписью) и API для админки.\n\nПодпись считается автоматически в pre-request скрипте коллекции из `webhookSecret`. Папки удобно запускать через Runner по порядку; письма смотреть в Mailpit (http://localhost:8025).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Signs marketplace webhooks the way MarketHub does: HMAC-SHA256 of \"<timestamp>.<raw body>\".",
+                    "if (pm.info.requestName === 'Оформлен') {",
+                    "    // The first request of the \"new order\" folder starts a new order, so every run gets fresh ids.",
+                    "    pm.collectionVariables.set('newOrderId', 'ord_PM' + Date.now());",
+                    "}",
+                    "",
+                    "if (pm.request.method === 'POST' && pm.request.url.getPath().endsWith('/webhooks/marketplace')) {",
+                    "    const body = pm.variables.replaceIn(pm.request.body.raw);",
+                    "    const timestamp = String(Math.floor(Date.now() / 1000));",
+                    "    const signature = CryptoJS.HmacSHA256(timestamp + '.' + body, pm.variables.get('webhookSecret')).toString(CryptoJS.enc.Hex);",
+                    "",
+                    "    let id = '';",
+                    "    try { id = JSON.parse(body).id; } catch (e) {}",
+                    "",
+                    "    pm.variables.set('webhookId', id);",
+                    "    pm.variables.set('webhookTimestamp', timestamp);",
+                    "    pm.variables.set('webhookSignature', 'sha256=' + signature);",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080"
+        },
+        {
+            "key": "webhookSecret",
+            "value": "whsec_test_5f1d8c2a9b"
+        },
+        {
+            "key": "newOrderId",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Примеры из задания",
+            "item": [
+                {
+                    "name": "order.created",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied / stale / duplicate', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\", \"stale\", \"duplicate\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Тело — task/examples/order-created.json байт в байт. При повторном запуске — duplicate.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_01JAXKZB7M2D9F4H6J8K0N3P5R\",\n    \"type\": \"order.created\",\n    \"created_at\": \"2026-10-21T10:02:12+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"ord_7Q2KX9M4\",\n            \"number\": \"MH-1048213\",\n            \"status\": \"created\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 2,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"3619.50\",\n            \"shipment\": null,\n            \"paid_at\": null,\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-21T13:02:11+03:00\"\n        }\n    }\n}\n"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "order.updated",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied / stale / duplicate', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\", \"stale\", \"duplicate\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Тело — task/examples/order-updated.json байт в байт. При повторном запуске — duplicate.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_01JAXM0C3T5V7X9Z1B3D5F7H9K\",\n    \"type\": \"order.updated\",\n    \"created_at\": \"2026-10-21T10:03:31+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"ord_7Q2KX9M4\",\n            \"number\": \"MH-1048213\",\n            \"status\": \"created\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": null,\n            \"paid_at\": null,\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-21T13:03:30+03:00\"\n        }\n    }\n}\n"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "order.paid",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied / stale / duplicate', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\", \"stale\", \"duplicate\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Тело — task/examples/order-paid.json байт в байт. При повторном запуске — duplicate.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_01JAXM4Q9T6V2K8R3N5W7Y0ZBC\",\n    \"type\": \"order.paid\",\n    \"created_at\": \"2026-10-21T10:05:48+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"ord_7Q2KX9M4\",\n            \"number\": \"MH-1048213\",\n            \"status\": \"paid\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": null,\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-21T13:05:47+03:00\"\n        }\n    }\n}\n"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "order.shipped",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied / stale / duplicate', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\", \"stale\", \"duplicate\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Тело — task/examples/order-shipped.json байт в байт. При повторном запуске — duplicate.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_01JAZ8R2W4Y6A8C0E2G4J6L8N0\",\n    \"type\": \"order.shipped\",\n    \"created_at\": \"2026-10-22T06:40:04+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"ord_7Q2KX9M4\",\n            \"number\": \"MH-1048213\",\n            \"status\": \"shipped\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": {\n                \"carrier\": \"СДЭК\",\n                \"tracking_number\": \"1098765432\",\n                \"tracking_url\": \"https://www.cdek.ru/ru/tracking?order_id=1098765432\"\n            },\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-22T06:40:03+00:00\"\n        }\n    }\n}\n"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "order.cancelled",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied / stale / duplicate', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\", \"stale\", \"duplicate\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Тело — task/examples/order-cancelled.json байт в байт. При повторном запуске — duplicate.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_01JAXZ6E8G0J2L4N6Q8S0U2W4Y\",\n    \"type\": \"order.cancelled\",\n    \"created_at\": \"2026-10-21T17:47:16+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"ord_3HV8PW2C\",\n            \"number\": \"MH-1048377\",\n            \"status\": \"cancelled\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"i.lebedev@example.org\",\n                \"name\": \"Игорь Лебедев\",\n                \"phone\": null\n            },\n            \"items\": [\n                {\n                    \"sku\": \"MUG-WHT-350\",\n                    \"name\": \"Кружка керамическая, белая, 350 мл\",\n                    \"quantity\": 2,\n                    \"price\": \"649.00\"\n                }\n            ],\n            \"delivery_price\": \"0.00\",\n            \"discount\": \"0.00\",\n            \"total\": \"1298.00\",\n            \"shipment\": null,\n            \"paid_at\": \"2026-10-21T18:11:02+03:00\",\n            \"cancelled_at\": \"2026-10-21T20:47:15+03:00\",\n            \"cancel_reason\": \"Покупатель отказался от заказа\",\n            \"created_at\": \"2026-10-21T18:09:40+03:00\",\n            \"updated_at\": \"2026-10-21T20:47:15+03:00\"\n        }\n    }\n}\n"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. Новый заказ: порядок, повторы, коррекция",
+            "item": [
+                {
+                    "name": "Оформлен",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Новый заказ: его id создаётся заново при каждом запуске этого запроса.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_{{newOrderId}}_created\",\n    \"type\": \"order.created\",\n    \"created_at\": \"2026-10-21T13:02:11+03:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"{{newOrderId}}\",\n            \"number\": \"MH-PM-{{newOrderId}}\",\n            \"status\": \"created\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": null,\n            \"paid_at\": null,\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-21T13:02:11+03:00\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Передан в доставку",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_{{newOrderId}}_shipped\",\n    \"type\": \"order.shipped\",\n    \"created_at\": \"2026-10-22T06:40:03+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"{{newOrderId}}\",\n            \"number\": \"MH-PM-{{newOrderId}}\",\n            \"status\": \"shipped\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": {\n                \"carrier\": \"СДЭК\",\n                \"tracking_number\": \"1098765432\",\n                \"tracking_url\": \"https://www.cdek.ru/ru/tracking?order_id=1098765432\"\n            },\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-22T06:40:03+00:00\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Оплачен — пришёл позже доставки",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус stale', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"stale\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Снимок старше текущего: заказ не меняется, письма «оплачен» нет, но статус paid попадает в историю.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_{{newOrderId}}_paid\",\n    \"type\": \"order.paid\",\n    \"created_at\": \"2026-10-21T13:05:47+03:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"{{newOrderId}}\",\n            \"number\": \"MH-PM-{{newOrderId}}\",\n            \"status\": \"paid\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": null,\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-21T13:05:47+03:00\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Повтор «передан в доставку»",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус duplicate', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"duplicate\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "То же событие ещё раз, с новой подписью: ничего не меняется.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_{{newOrderId}}_shipped\",\n    \"type\": \"order.shipped\",\n    \"created_at\": \"2026-10-22T06:40:03+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"{{newOrderId}}\",\n            \"number\": \"MH-PM-{{newOrderId}}\",\n            \"status\": \"shipped\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": {\n                \"carrier\": \"СДЭК\",\n                \"tracking_number\": \"1098765432\",\n                \"tracking_url\": \"https://www.cdek.ru/ru/tracking?order_id=1098765432\"\n            },\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-22T06:40:03+00:00\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Неизвестный тип события",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус ignored', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"ignored\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Тип, которого мы не знаем: 200, событие сохранено, заказ не тронут.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_{{newOrderId}}_refund\",\n    \"type\": \"order.refund_requested\",\n    \"created_at\": \"2026-10-25T00:00:00+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"{{newOrderId}}\",\n            \"number\": \"MH-PM-{{newOrderId}}\",\n            \"status\": \"cancelled\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": {\n                \"carrier\": \"СДЭК\",\n                \"tracking_number\": \"1098765432\",\n                \"tracking_url\": \"https://www.cdek.ru/ru/tracking?order_id=1098765432\"\n            },\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-25T00:00:00+00:00\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Доставлен",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_{{newOrderId}}_delivered\",\n    \"type\": \"order.delivered\",\n    \"created_at\": \"2026-10-23T09:00:00+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"{{newOrderId}}\",\n            \"number\": \"MH-PM-{{newOrderId}}\",\n            \"status\": \"delivered\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": {\n                \"carrier\": \"СДЭК\",\n                \"tracking_number\": \"1098765432\",\n                \"tracking_url\": \"https://www.cdek.ru/ru/tracking?order_id=1098765432\"\n            },\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-23T09:00:00+00:00\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Ручная коррекция: снова в доставке",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200 и статус applied', () => {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    pm.expect(pm.response.json().status).to.be.oneOf([\"applied\"]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Статус откатили назад более новым снимком: применяется, повторного письма нет.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_{{newOrderId}}_corrected\",\n    \"type\": \"order.shipped\",\n    \"created_at\": \"2026-10-23T12:00:00+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"{{newOrderId}}\",\n            \"number\": \"MH-PM-{{newOrderId}}\",\n            \"status\": \"shipped\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": {\n                \"carrier\": \"СДЭК\",\n                \"tracking_number\": \"1098765432\",\n                \"tracking_url\": \"https://www.cdek.ru/ru/tracking?order_id=1098765432\"\n            },\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-23T12:00:00+00:00\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Карточка нового заказа",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200', () => pm.response.to.have.status(200));",
+                                    "const order = pm.response.json().data;",
+                                    "pm.test('статус shipped после коррекции', () => pm.expect(order.status).to.eql('shipped'));",
+                                    "pm.test('история с откатом', () => pm.expect(order.history.map(h => h.status)).to.eql(['created', 'paid', 'shipped', 'delivered', 'shipped']));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders/{{newOrderId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders",
+                                "{{newOrderId}}"
+                            ],
+                            "query": []
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. Ошибки доставки",
+            "item": [
+                {
+                    "name": "Неверная подпись",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('401', () => pm.response.to.have.status(401));",
+                                    "pm.test('ошибка в JSON', () => pm.expect(pm.response.json()).to.have.property('message'));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "sha256=0000000000000000000000000000000000000000000000000000000000000000"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_01JAXM4Q9T6V2K8R3N5W7Y0ZBC\",\n    \"type\": \"order.paid\",\n    \"created_at\": \"2026-10-21T10:05:48+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"ord_7Q2KX9M4\",\n            \"number\": \"MH-1048213\",\n            \"status\": \"paid\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": null,\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-21T13:05:47+03:00\"\n        }\n    }\n}\n"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Просроченный timestamp",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('401', () => pm.response.to.have.status(401));",
+                                    "pm.test('ошибка в JSON', () => pm.expect(pm.response.json()).to.have.property('message'));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Окно — 5 минут. Подпись верна для своего времени, но время старое.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "1700000000"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_01JAXM4Q9T6V2K8R3N5W7Y0ZBC\",\n    \"type\": \"order.paid\",\n    \"created_at\": \"2026-10-21T10:05:48+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"ord_7Q2KX9M4\",\n            \"number\": \"MH-1048213\",\n            \"status\": \"paid\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.50\",\n            \"shipment\": null,\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-21T13:05:47+03:00\"\n        }\n    }\n}\n"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Тело не по формату (подпись верная)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('422', () => pm.response.to.have.status(422));",
+                                    "pm.test('ошибка в JSON', () => pm.expect(pm.response.json()).to.have.property('errors'));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "description": "Нет number, total без двух знаков: 422, событие не сохраняется.",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-Webhook-Id",
+                                "value": "{{webhookId}}"
+                            },
+                            {
+                                "key": "X-Webhook-Timestamp",
+                                "value": "{{webhookTimestamp}}"
+                            },
+                            {
+                                "key": "X-Webhook-Signature",
+                                "value": "{{webhookSignature}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"evt_postman_invalid\",\n    \"type\": \"order.paid\",\n    \"created_at\": \"2026-10-21T10:05:48+00:00\",\n    \"data\": {\n        \"order\": {\n            \"id\": \"ord_7Q2KX9M4\",\n            \"status\": \"paid\",\n            \"currency\": \"RUB\",\n            \"customer\": {\n                \"email\": \"anna.smirnova@example.com\",\n                \"name\": \"Анна Смирнова\",\n                \"phone\": \"+79161234567\"\n            },\n            \"items\": [\n                {\n                    \"sku\": \"TSHIRT-BLK-M\",\n                    \"name\": \"Футболка базовая, чёрная, M\",\n                    \"quantity\": 3,\n                    \"price\": \"1290.00\"\n                },\n                {\n                    \"sku\": \"CAP-NVY\",\n                    \"name\": \"Бейсболка \\\"Classic\\\" / синяя\",\n                    \"quantity\": 1,\n                    \"price\": \"890.50\"\n                }\n            ],\n            \"delivery_price\": \"349.00\",\n            \"discount\": \"200.00\",\n            \"total\": \"4909.5\",\n            \"shipment\": null,\n            \"paid_at\": \"2026-10-21T13:05:47+03:00\",\n            \"cancelled_at\": null,\n            \"cancel_reason\": null,\n            \"created_at\": \"2026-10-21T13:02:11+03:00\",\n            \"updated_at\": \"2026-10-21T13:05:47+03:00\"\n        }\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/webhooks/marketplace",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "webhooks",
+                                "marketplace"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "4. API для админки",
+            "item": [
+                {
+                    "name": "Список заказов",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200', () => pm.response.to.have.status(200));",
+                                    "const json = pm.response.json();",
+                                    "pm.test('data/links/meta', () => pm.expect(json).to.have.all.keys('data', 'links', 'meta'));",
+                                    "pm.test('новые первыми', () => {",
+                                    "    const dates = json.data.map(o => Date.parse(o.created_at));",
+                                    "    pm.expect(dates).to.eql([...dates].sort((a, b) => b - a));",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": []
+                        }
+                    }
+                },
+                {
+                    "name": "Фильтр по статусу",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200', () => pm.response.to.have.status(200));",
+                                    "pm.test('только shipped', () => pm.response.json().data.forEach(o => pm.expect(o.status).to.eql('shipped')));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders?status=shipped",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "shipped"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Фильтр по email в другом регистре",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200', () => pm.response.to.have.status(200));",
+                                    "pm.test('найдены заказы anna.smirnova@example.com', () => {",
+                                    "    const data = pm.response.json().data;",
+                                    "    pm.expect(data.length).to.be.above(0);",
+                                    "    data.forEach(o => pm.expect(o.customer.email.toLowerCase()).to.eql('anna.smirnova@example.com'));",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders?email=Anna.Smirnova@Example.COM",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "email",
+                                    "value": "Anna.Smirnova@Example.COM"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Пагинация: per_page=1, page=2",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200', () => pm.response.to.have.status(200));",
+                                    "const meta = pm.response.json().meta;",
+                                    "pm.test('meta второй страницы', () => {",
+                                    "    pm.expect(meta.current_page).to.eql(2);",
+                                    "    pm.expect(meta.per_page).to.eql(1);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders?per_page=1&page=2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "2"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "per_page=101 → 422",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('422', () => pm.response.to.have.status(422));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders?per_page=101",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "101"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Неизвестный статус → 422",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('422', () => pm.response.to.have.status(422));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders?status=unknown",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "unknown"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Карточка заказа из примеров",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('200', () => pm.response.to.have.status(200));",
+                                    "const order = pm.response.json().data;",
+                                    "pm.test('суммы строками', () => pm.expect(order.total).to.match(/^-?\\d+\\.\\d{2}$/));",
+                                    "pm.test('subtotal = price × quantity', () => order.items.forEach(i =>",
+                                    "    pm.expect(Number(i.subtotal)).to.be.closeTo(Number(i.price) * i.quantity, 0.001)));",
+                                    "pm.test('created_at — момент маркетплейса', () => pm.expect(Date.parse(order.created_at)).to.eql(Date.parse('2026-10-21T13:02:11+03:00')));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders/ord_7Q2KX9M4",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders",
+                                "ord_7Q2KX9M4"
+                            ],
+                            "query": []
+                        }
+                    }
+                },
+                {
+                    "name": "Несуществующий заказ → 404",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('404', () => pm.response.to.have.status(404));"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "description": "",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/orders/ord_missing",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders",
+                                "ord_missing"
+                            ],
+                            "query": []
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
