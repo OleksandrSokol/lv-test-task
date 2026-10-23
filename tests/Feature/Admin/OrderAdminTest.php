@@ -34,6 +34,11 @@ class OrderAdminTest extends TestCase
         $this->actingAs(User::factory()->create());
     }
 
+    public function test_site_root_leads_to_admin(): void
+    {
+        $this->get('/')->assertRedirect('/admin');
+    }
+
     public function test_guest_is_sent_to_login(): void
     {
         auth()->logout();

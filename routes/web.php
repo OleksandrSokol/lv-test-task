@@ -2,6 +2,5 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// No public site: the root leads to the admin panel.
+Route::redirect('/', '/admin');
