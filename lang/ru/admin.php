@@ -5,6 +5,11 @@ return [
         'view_logs' => 'Журнал',
     ],
 
+    'filters' => [
+        'order'           => 'Заказ',
+        'order_indicator' => 'Заказ: :order',
+    ],
+
     'navigation' => [
         'orders'  => 'Заказы',
         'letters' => 'Письма',
@@ -121,7 +126,6 @@ return [
             'event'        => 'Событие',
             'subject_type' => 'Объект',
             'subject_id'   => 'ID объекта',
-            'order'        => 'Заказ',
             'source'       => 'Источник',
             'data'         => 'Данные',
             'from'         => 'С',
@@ -135,7 +139,6 @@ return [
         ],
 
         'subject_indicator' => 'ID объекта: :id',
-        'order_indicator'   => 'Заказ: :order',
         'period_indicator'  => 'Период: :from — :until',
     ],
 

@@ -2,15 +2,14 @@
 
 namespace App\Filament\Resources\Logs;
 
+use App\Filament\Filters\OrderFilter;
 use App\Filament\Infolists\JsonEntry;
 use App\Filament\Resources\Logs\Pages\ManageLogs;
 use App\Modules\Core\Enums\ActivityEventEnum;
 use App\Modules\Core\Enums\ActivitySourceEnum;
 use App\Modules\Core\Models\Log;
-use App\Modules\Order\Models\Order;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -114,27 +113,7 @@ class LogResource extends Resource
                         ->all()),
 
                 // Everything about one order: its own events, its letters and its webhooks.
-                Filter::make('order')
-                    ->schema([
-                        Select::make('order_id')
-                            ->label(__('admin.logs.fields.order'))
-                            ->searchable()
-                            ->getSearchResultsUsing(fn (string $search) => Order::query()
-                                ->where('number', 'ilike', "%{$search}%")
-                                ->orWhere('external_id', 'ilike', "%{$search}%")
-                                ->limit(50)
-                                ->get()
-                                ->mapWithKeys(fn (Order $order) => [$order->id => self::orderLabel($order)])
-                                ->all())
-                            ->getOptionLabelUsing(fn ($value) => ($order = Order::query()->find($value)) ? self::orderLabel($order) : null),
-                    ])
-                    ->query(fn (Builder $query, array $data) => $query->when(
-                        $data['order_id'] ?? null,
-                        fn (Builder $query, $id) => $query->whereRaw("data->>'order_id' = ?", [(string) $id]),
-                    ))
-                    ->indicateUsing(fn (array $data) => filled($data['order_id'] ?? null)
-                        ? __('admin.logs.order_indicator', ['order' => ($order = Order::query()->find($data['order_id'])) ? self::orderLabel($order) : $data['order_id']])
-                        : null),
+                OrderFilter::make('order_id', 'id', fn (Builder $query, string $id) => $query->whereRaw("data->>'order_id' = ?", [$id])),
 
                 Filter::make('subject_id')
                     ->schema([
@@ -219,11 +198,6 @@ class LogResource extends Resource
                         ->placeholder('—'),
                 ]),
         ];
-    }
-
-    private static function orderLabel(Order $order): string
-    {
-        return "{$order->number} ({$order->external_id})";
     }
 
     private static function subjectLabel(string $type): string

@@ -189,6 +189,23 @@ class OrderAdminTest extends TestCase
             ->assertCanNotSeeTableRecords([$created]);
     }
 
+    public function test_webhook_inbox_filters_by_order(): void
+    {
+        Mail::fake();
+        $this->seedLetterTemplates();
+        $this->sendWebhook($this->exampleEvent('order-created'))->assertOk();
+        $this->sendWebhook($this->exampleEvent('order-paid'))->assertOk();
+        $this->sendWebhook($this->exampleEvent('order-cancelled'))->assertOk();
+
+        $ofOrder = WebhookEvent::query()->where('order_external_id', 'ord_7Q2KX9M4')->get();
+        $this->assertCount(2, $ofOrder);
+
+        Livewire::test(ManageWebhookEvents::class)
+            ->filterTable('order', ['order_external_id' => 'ord_7Q2KX9M4'])
+            ->assertCanSeeTableRecords($ofOrder)
+            ->assertCanNotSeeTableRecords(WebhookEvent::query()->where('order_external_id', 'ord_3HV8PW2C')->get());
+    }
+
     public function test_webhook_body_is_shown_formatted_and_copied_as_received(): void
     {
         $body = $this->exampleEvent('order-created');

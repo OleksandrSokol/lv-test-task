@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\WebhookEvents;
 
 use App\Filament\Actions\ViewLogsAction;
+use App\Filament\Filters\OrderFilter;
 use App\Filament\Infolists\JsonEntry;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\WebhookEvents\Pages\ManageWebhookEvents;
@@ -19,6 +20,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -111,6 +113,8 @@ class WebhookEventResource extends Resource
                     ->options(collect(WebhookStatusEnum::options())
                         ->except([WebhookStatusEnum::RECEIVED->value, WebhookStatusEnum::DUPLICATE->value])
                         ->all()),
+
+                OrderFilter::make('order_external_id', 'external_id', fn (Builder $query, string $externalId) => $query->where('order_external_id', $externalId)),
 
                 SelectFilter::make('type')
                     ->label(__('admin.webhook_events.fields.type'))
