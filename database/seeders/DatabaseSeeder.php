@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Modules\Notification\database\seeders\LetterTemplateSeeder;
+use App\Modules\User\database\seeders\AdminUserSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,6 +13,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(LetterTemplateSeeder::class);
+        $this->call([
+            LetterTemplateSeeder::class,
+            AdminUserSeeder::class,
+        ]);
     }
 }

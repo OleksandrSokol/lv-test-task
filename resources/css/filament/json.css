@@ -1,0 +1,12 @@
+/* JSON syntax highlighting for App\Filament\Infolists\JsonEntry; colours from the panel palette. */
+.json-view { white-space: pre-wrap; word-break: break-word; margin: 0; }
+.json-view .json-key { color: var(--primary-700); }
+.json-view .json-string { color: var(--success-700); }
+.json-view .json-number { color: var(--warning-700); }
+.json-view .json-bool { color: var(--info-700); }
+.json-view .json-null { color: var(--gray-500); font-style: italic; }
+.dark .json-view .json-key { color: var(--primary-300); }
+.dark .json-view .json-string { color: var(--success-400); }
+.dark .json-view .json-number { color: var(--warning-400); }
+.dark .json-view .json-bool { color: var(--info-400); }
+.dark .json-view .json-null { color: var(--gray-400); }

@@ -37,7 +37,7 @@ class SendOrderStatusLetter implements ShouldQueue
             $this->letters->skipPending(
                 $order->id,
                 keep: $allowed,
-                reason: __('letters.skipped_reason', ['status' => $order->status->value]),
+                reason: __('letters.skipped_reason', ['status' => $order->status->label()]),
             );
 
             $letter = $this->letterFor($event->to);

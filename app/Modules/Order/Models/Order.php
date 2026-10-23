@@ -3,11 +3,14 @@
 namespace App\Modules\Order\Models;
 
 use App\Modules\Core\Traits\Models\StoresDatesWithOffset;
+use App\Modules\Notification\Models\LogLetter;
 use App\Modules\Order\Enums\CurrencyEnum;
 use App\Modules\Order\Enums\OrderStatusEnum;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -58,6 +61,15 @@ class Order extends Model
         ];
     }
 
+    /**
+     * Exact email, ignoring case; matches the lower(customer_email) index.
+     */
+    #[Scope]
+    protected function whereCustomerEmail(Builder $query, string $email): void
+    {
+        $query->whereRaw('lower(customer_email) = ?', [mb_strtolower(trim($email))]);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class)->orderBy('position');
@@ -66,5 +78,10 @@ class Order extends Model
     public function history(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class)->orderBy('changed_at')->orderBy('id');
+    }
+
+    public function letters(): HasMany
+    {
+        return $this->hasMany(LogLetter::class)->orderBy('id');
     }
 }

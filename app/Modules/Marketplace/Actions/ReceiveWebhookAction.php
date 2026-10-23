@@ -23,18 +23,22 @@ class ReceiveWebhookAction
         private readonly ApplyOrderSnapshotAction $applySnapshot,
     ) {}
 
-    public function handle(WebhookEventData $event, ?OrderSnapshotData $snapshot): WebhookStatusEnum
+    /**
+     * @param  string  $rawBody  the request body as received, kept for investigations
+     */
+    public function handle(WebhookEventData $event, ?OrderSnapshotData $snapshot, string $rawBody): WebhookStatusEnum
     {
-        return DB::transaction(fn () => $this->receive($event, $snapshot));
+        return DB::transaction(fn () => $this->receive($event, $snapshot, $rawBody));
     }
 
-    private function receive(WebhookEventData $event, ?OrderSnapshotData $snapshot): WebhookStatusEnum
+    private function receive(WebhookEventData $event, ?OrderSnapshotData $snapshot, string $rawBody): WebhookStatusEnum
     {
         // A concurrent delivery of the same event waits on the unique index until this one commits.
         $inbox = WebhookEvent::query()->createOrFirst(['event_id' => $event->id], [
             'type'              => $event->type,
             'order_external_id' => $snapshot?->externalId,
             'payload'           => $event->toArray(),
+            'raw_body'          => $rawBody,
             'occurred_at'       => $event->createdAt,
             'status'            => WebhookStatusEnum::RECEIVED,
         ]);

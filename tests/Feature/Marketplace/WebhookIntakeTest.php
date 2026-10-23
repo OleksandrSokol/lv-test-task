@@ -45,10 +45,13 @@ class WebhookIntakeTest extends TestCase
         $this->assertSame(WebhookStatusEnum::APPLIED, WebhookEvent::query()->sole()->status);
     }
 
-    public function test_marketplace_signature_example_body_is_accepted_byte_for_byte(): void
+    public function test_marketplace_signature_example_body_is_accepted_and_kept_byte_for_byte(): void
     {
-        $this->sendWebhook(file_get_contents(base_path('task/examples/signature-example-body.json')))
-            ->assertOk();
+        $body = file_get_contents(base_path('task/examples/signature-example-body.json'));
+
+        $this->sendWebhook($body)->assertOk();
+
+        $this->assertSame($body, WebhookEvent::query()->sole()->raw_body);
     }
 
     public function test_inbox_keeps_event_and_order_reference(): void

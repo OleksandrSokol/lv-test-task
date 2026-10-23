@@ -14,6 +14,8 @@ return new class extends Migration
             $table->string('type');
             $table->string('order_external_id')->nullable()->index();
             $table->jsonb('payload');
+            // The request body byte for byte, as signed; jsonb would reformat it.
+            $table->text('raw_body');
             $table->timestampTz('occurred_at');
             $table->string('status');
             $table->timestampsTz();
