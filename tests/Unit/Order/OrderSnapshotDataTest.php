@@ -33,6 +33,16 @@ class OrderSnapshotDataTest extends TestCase
         $this->assertSame('UTC', $snapshot->updatedAt->getTimezone()->getName());
     }
 
+    public function test_fractional_seconds_are_accepted_and_kept(): void
+    {
+        $event = json_decode(file_get_contents(base_path('task/examples/order-paid.json')), true);
+        $event['data']['order']['updated_at'] = '2026-10-21T13:05:47.25+03:00';
+
+        $snapshot = OrderSnapshotData::validateAndCreate($event['data']['order']);
+
+        $this->assertSame('2026-10-21 10:05:47.250000', $snapshot->updatedAt->format('Y-m-d H:i:s.u'));
+    }
+
     private function snapshot(string $example): OrderSnapshotData
     {
         $event = json_decode(file_get_contents(base_path("task/examples/{$example}.json")), true);

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Order\Http\Resources;
 
+use App\Modules\Order\Http\Resources\Concerns\FormatsMoments;
 use App\Modules\Order\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -13,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class OrderResource extends JsonResource
 {
+    use FormatsMoments;
+
     public function toArray(Request $request): array
     {
         return [
@@ -34,11 +37,11 @@ class OrderResource extends JsonResource
                 'tracking_number' => $this->shipment_tracking_number,
                 'tracking_url'    => $this->shipment_tracking_url,
             ],
-            'paid_at'       => $this->paid_at?->toIso8601String(),
-            'cancelled_at'  => $this->cancelled_at?->toIso8601String(),
+            'paid_at'       => $this->moment($this->paid_at),
+            'cancelled_at'  => $this->moment($this->cancelled_at),
             'cancel_reason' => $this->cancel_reason,
-            'created_at'    => $this->external_created_at->toIso8601String(),
-            'updated_at'    => $this->external_updated_at->toIso8601String(),
+            'created_at'    => $this->moment($this->external_created_at),
+            'updated_at'    => $this->moment($this->external_updated_at),
             'history'       => OrderStatusHistoryResource::collection($this->history),
         ];
     }

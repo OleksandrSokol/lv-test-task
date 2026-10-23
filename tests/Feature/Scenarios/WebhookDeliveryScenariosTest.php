@@ -173,6 +173,29 @@ class WebhookDeliveryScenariosTest extends TestCase
         $this->order()->assertJsonPath('data.status', 'paid');
     }
 
+    public function test_dates_with_fractional_seconds_keep_their_moment(): void
+    {
+        $paid = fn (string $id, string $updatedAt) => $this->exampleEvent('order-paid', [
+            'id'   => $id,
+            'data' => ['order' => ['paid_at' => '2026-10-21T13:05:47.25+03:00', 'updated_at' => $updatedAt]],
+        ]);
+
+        $this->sendWebhook($paid('evt_paid', '2026-10-21T13:05:47.25+03:00'))->assertOk()->assertJson(['status' => 'applied']);
+        // Same second, later fraction: newer.
+        $this->sendWebhook($paid('evt_paid_later', '2026-10-21T13:05:47.5+03:00'))->assertOk()->assertJson(['status' => 'applied']);
+        // The very same moment again: not newer, and the history keeps one paid entry.
+        $this->sendWebhook($paid('evt_paid_again', '2026-10-21T13:05:47.5+03:00'))->assertOk()->assertJson(['status' => 'stale']);
+
+        $this->order()
+            ->assertJsonPath('data.paid_at', '2026-10-21T10:05:47.25+00:00')
+            ->assertJsonPath('data.updated_at', '2026-10-21T10:05:47.5+00:00')
+            ->assertJsonPath('data.created_at', '2026-10-21T10:02:11+00:00')
+            ->assertJsonPath('data.history', [
+                ['status' => 'created', 'at' => '2026-10-21T10:02:11+00:00'],
+                ['status' => 'paid', 'at' => '2026-10-21T10:05:47.25+00:00'],
+            ]);
+    }
+
     private function order(): TestResponse
     {
         return $this->getJson('/api/orders/' . self::ORDER)->assertOk();

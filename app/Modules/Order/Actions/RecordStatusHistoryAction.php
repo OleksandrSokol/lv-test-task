@@ -26,7 +26,8 @@ class RecordStatusHistoryAction
         ], fn (array $fact) => $fact[1] !== null);
 
         foreach ($exact as [$status, $at]) {
-            $order->history()->firstOrCreate(['status' => $status, 'changed_at' => $at]);
+            // Bound as a Carbon instance, the date would lose its fraction; the model's own format keeps it.
+            $order->history()->firstOrCreate(['status' => $status, 'changed_at' => $order->history()->getRelated()->fromDateTime($at)]);
         }
 
         if (!$this->hasOwnTimestamp($snapshot)) {

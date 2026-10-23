@@ -2,9 +2,11 @@
 
 namespace App\Modules\Marketplace\Dtos;
 
+use App\Modules\Order\Dtos\OrderSnapshotData;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\MapName;
-use Spatie\LaravelData\Attributes\Validation\DateFormat;
+use Spatie\LaravelData\Attributes\Validation\Date;
+use Spatie\LaravelData\Attributes\Validation\Regex;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
 use Spatie\LaravelData\Data;
@@ -23,7 +25,7 @@ class WebhookEventData extends Data
     public function __construct(
         public string $id,
         public string $type,
-        #[DateFormat(DATE_ATOM), WithCast(DateTimeInterfaceCast::class, setTimeZone: 'UTC')]
+        #[Regex(OrderSnapshotData::DATE_PATTERN), Date, WithCast(DateTimeInterfaceCast::class, format: OrderSnapshotData::DATE_FORMATS, setTimeZone: 'UTC')]
         public CarbonImmutable $createdAt,
         public array $data = [],
     ) {}

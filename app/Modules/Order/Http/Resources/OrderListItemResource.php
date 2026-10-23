@@ -2,6 +2,7 @@
 
 namespace App\Modules\Order\Http\Resources;
 
+use App\Modules\Order\Http\Resources\Concerns\FormatsMoments;
 use App\Modules\Order\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -11,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class OrderListItemResource extends JsonResource
 {
+    use FormatsMoments;
+
     public function toArray(Request $request): array
     {
         return [
@@ -24,8 +27,8 @@ class OrderListItemResource extends JsonResource
             'total'    => $this->total,
             'currency' => $this->currency,
             // The marketplace's moments, not when we received them.
-            'created_at' => $this->external_created_at->toIso8601String(),
-            'updated_at' => $this->external_updated_at->toIso8601String(),
+            'created_at' => $this->moment($this->external_created_at),
+            'updated_at' => $this->moment($this->external_updated_at),
         ];
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->jsonb('payload');
             // The request body byte for byte, as signed; jsonb would reformat it.
             $table->text('raw_body');
-            $table->timestampTz('occurred_at');
+            $table->timestampTz('occurred_at', 6);
             $table->string('status');
             $table->timestampsTz();
         });

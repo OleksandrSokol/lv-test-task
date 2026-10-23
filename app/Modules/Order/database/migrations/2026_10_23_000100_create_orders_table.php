@@ -23,11 +23,12 @@ return new class extends Migration
             $table->string('shipment_carrier')->nullable();
             $table->string('shipment_tracking_number')->nullable();
             $table->text('shipment_tracking_url')->nullable();
-            $table->timestampTz('paid_at')->nullable();
-            $table->timestampTz('cancelled_at')->nullable();
+            // Marketplace moments keep fractional seconds (precision 6); the default 0 would round them.
+            $table->timestampTz('paid_at', 6)->nullable();
+            $table->timestampTz('cancelled_at', 6)->nullable();
             $table->text('cancel_reason')->nullable();
-            $table->timestampTz('external_created_at');
-            $table->timestampTz('external_updated_at');
+            $table->timestampTz('external_created_at', 6);
+            $table->timestampTz('external_updated_at', 6);
             $table->timestampsTz();
 
             $table->index(['external_created_at', 'id']);

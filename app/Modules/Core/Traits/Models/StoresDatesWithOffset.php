@@ -7,11 +7,12 @@ namespace App\Modules\Core\Traits\Models;
  *
  * The default format (`Y-m-d H:i:s`) drops the offset, so `13:02:11+03:00`
  * would be stored as `13:02:11` in the session time zone — a different moment.
+ * Fractional seconds are kept too: the marketplace may send them.
  */
 trait StoresDatesWithOffset
 {
     public function getDateFormat(): string
     {
-        return 'Y-m-d H:i:sP';
+        return 'Y-m-d H:i:s.uP';
     }
 }

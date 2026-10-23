@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->string('status');
-            $table->timestampTz('changed_at');
+            $table->timestampTz('changed_at', 6);
             $table->timestampTz('created_at')->useCurrent();
 
             $table->unique(['order_id', 'status', 'changed_at']);

@@ -7,7 +7,7 @@ use App\Modules\Order\Enums\OrderStatusEnum;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\MapInputName;
-use Spatie\LaravelData\Attributes\Validation\DateFormat;
+use Spatie\LaravelData\Attributes\Validation\Date;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Regex;
 use Spatie\LaravelData\Attributes\WithCast;
@@ -25,6 +25,15 @@ use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 class OrderSnapshotData extends Data
 {
     public const AMOUNT_PATTERN = '/^-?\d+\.\d{2}$/';
+
+    /**
+     * ISO 8601 with an offset; fractional seconds are allowed and kept.
+     * A pattern rather than `date_format`: that rule formats the date back and compares,
+     * so `…:47.25` would fail against `.u` (`…:47.250000`).
+     */
+    public const DATE_PATTERN = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/';
+
+    public const DATE_FORMATS = [DATE_ATOM, 'Y-m-d\TH:i:s.uP'];
 
     /**
      * @param  array<int, OrderItemData>  $items
@@ -45,14 +54,14 @@ class OrderSnapshotData extends Data
         #[Regex(self::AMOUNT_PATTERN)]
         public string $total,
         public ?ShipmentData $shipment,
-        #[DateFormat(DATE_ATOM), WithCast(DateTimeInterfaceCast::class, setTimeZone: 'UTC')]
+        #[Regex(self::DATE_PATTERN), Date, WithCast(DateTimeInterfaceCast::class, format: self::DATE_FORMATS, setTimeZone: 'UTC')]
         public ?CarbonImmutable $paidAt,
-        #[DateFormat(DATE_ATOM), WithCast(DateTimeInterfaceCast::class, setTimeZone: 'UTC')]
+        #[Regex(self::DATE_PATTERN), Date, WithCast(DateTimeInterfaceCast::class, format: self::DATE_FORMATS, setTimeZone: 'UTC')]
         public ?CarbonImmutable $cancelledAt,
         public ?string $cancelReason,
-        #[DateFormat(DATE_ATOM), WithCast(DateTimeInterfaceCast::class, setTimeZone: 'UTC')]
+        #[Regex(self::DATE_PATTERN), Date, WithCast(DateTimeInterfaceCast::class, format: self::DATE_FORMATS, setTimeZone: 'UTC')]
         public CarbonImmutable $createdAt,
-        #[DateFormat(DATE_ATOM), WithCast(DateTimeInterfaceCast::class, setTimeZone: 'UTC')]
+        #[Regex(self::DATE_PATTERN), Date, WithCast(DateTimeInterfaceCast::class, format: self::DATE_FORMATS, setTimeZone: 'UTC')]
         public CarbonImmutable $updatedAt,
     ) {}
 }
