@@ -3,6 +3,7 @@
 namespace App\Modules\Core\Models;
 
 use App\Modules\Core\Enums\ActivitySourceEnum;
+use App\Modules\Core\Traits\Models\StoresDatesWithOffset;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Log extends Model
 {
+    use StoresDatesWithOffset;
+
     public const UPDATED_AT = null;
 
     protected $guarded = [];
