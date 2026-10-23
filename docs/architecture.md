@@ -21,7 +21,7 @@ app/Modules/
 | `Marketplace` | Принимает `POST /api/webhooks/marketplace`: проверяет подпись и окно времени, валидирует тело, записывает событие в inbox и передаёт снимок заказа в `Order` | `VerifyMarketplaceSignature`, `MarketplaceWebhookRequest`, `ReceiveWebhookAction`, модель `WebhookEvent` |
 | `Order` | Хранит текущее состояние заказа, позиции и историю статусов. Применяет снимок, только если он новее сохранённого. Отдаёт `GET /api/orders` и `GET /api/orders/{id}`. Решает, какое письмо отправить | `ApplyOrderSnapshotAction`, `RecordStatusHistoryAction`, `SearchOrdersQuery`, `OrderResource`, `SendOrderStatusLetter` |
 | `Notification` | Шаблоны писем с подстановками `{{ … }}`, журнал писем (`log_letters`, одно письмо каждого типа на заказ), отправка job'ом и снятие писем, которые стали противоречить заказу | `LetterService`, `SendLetterJob`, `LetterMail` |
-| `Core` | `DomainEvent` — базовое событие, которое срабатывает после коммита и пишется в журнал действий слушателем `WriteActivityLog` | `DomainEvent`, `WriteActivityLog`, модель `Log`, трейт `HasEnumHelpers` |
+| `Core` | `DomainEvent` — базовое событие, которое срабатывает после коммита и пишется в журнал действий слушателем `WriteActivityLog` | `DomainEvent`, `WriteActivityLog`, модель `Log`, `ActivityEventEnum`, трейт `HasEnumHelpers` |
 | `User` | Модель пользователя и сидер администратора | `User`, `AdminUserSeeder` |
 
 Событие идёт по модулям в порядке `Marketplace` → `Order` → `Notification`; `Core` используют все.
@@ -61,7 +61,7 @@ POST /api/webhooks/marketplace
 | `webhook_events` | Inbox: unique `event_id`, тип, результат, id заказа, сырое тело запроса |
 | `letter_templates` | Тема и текст писем, редактируются в админке |
 | `log_letters` | Письма заказа: получатель, текст, статус (`queued` / `sent` / `failed` / `skipped`); unique `(order_id, template_key)` |
-| `logs` | Журнал действий: событие, объект, данные, источник (вебхук или очередь) |
+| `logs` | Журнал действий: событие (`ActivityEventEnum`), объект, данные, источник (вебхук или очередь). В `data` у всего, что касается заказа, — `order_id` (наш id) и `order_external_id` (id MarketHub): по ним в журнале видно всё по заказу — его события, письма и вебхуки |
 | `users` | Пользователи админки |
 
 Моменты маркетплейса — `timestamptz(6)`: дробные секунды не теряются; суммы — `numeric(12,2)`.
@@ -79,12 +79,16 @@ POST /api/webhooks/marketplace
 ## Админка
 
 Filament, `app/Filament`. Ресурсы подключены и меню собрано явно в `App\Providers\Filament\AdminPanelProvider`.
+Даты показываются в поясе `ADMIN_TIMEZONE` (по умолчанию `Europe/Moscow`).
 
 | Группа меню | Ресурс | Что можно |
 |---|---|---|
-| Заказы | Заказы | список, поиск, фильтр по статусу, карточка с позициями, историей, письмами |
-| | Вебхуки | список, фильтры, просмотр с телом запроса |
-| Письма | Шаблоны писем | редактирование |
-| | Журнал писем | просмотр |
-| Система | Журнал действий | фильтры, просмотр данных |
+| Заказы | Заказы | список, поиск по номеру и email, фильтр по статусу; карточка с позициями, историей статусов и письмами, кнопки «Вебхуки» и «Журнал» — всё по этому заказу |
+| | Вебхуки | список, фильтры по заказу, результату и типу, просмотр с телом запроса |
+| Письма | Шаблоны писем | редактирование, справка по подстановкам |
+| | Журнал писем | просмотр, фильтры по статусу и письму |
+| Система | Журнал действий | фильтры по заказу, событию, источнику, объекту и дате; просмотр данных |
 | | Пользователи | редактирование |
+
+Общие части: фильтр «Заказ» (`App\Filament\Filters\OrderFilter`, поиск по номеру и id маркетплейса),
+кнопки `ViewLogsAction` / `ViewWebhooksAction`, вывод JSON с подсветкой (`App\Filament\Infolists\JsonEntry`).
